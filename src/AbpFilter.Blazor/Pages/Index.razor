@@ -1,0 +1,34 @@
+﻿@page "/"
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.AspNetCore.Components.Web
+@using AbpFilter.Application.Contracts.Books
+@using AbpFilter.Localization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AbpFilterResource> L
+@inject AbpBlazorMessageLocalizerHelper<AbpFilterResource> LH
+@inherits AbpCrudPageBase<IBookAppService, BookDto, Guid, BookPagedAndSortedResultRequestDto, CreateUpdateBookDto>
+
+<Card>
+  <CardBody>
+    <DataGrid TItem="BookDto" Filterable="true" Data="Entities" ReadData="OnDataGridReadAsync" TotalItems="TotalCount" ShowPager="true" PageSize="PageSize">
+      <DataGridColumns>
+        <DataGridEntityActionsColumn TItem="BookDto" @ref="@EntityActionsColumn">
+          <DisplayTemplate>
+            <EntityActions TItem="BookDto" EntityActionsColumn="@EntityActionsColumn">
+              <EntityAction TItem="BookDto" Text="@L["Edit"]" Visible="HasUpdatePermission" Clicked="() => OpenEditModalAsync(context)" />
+              <EntityAction TItem="BookDto" Text="@L["Delete"]" Visible="HasDeletePermission" Clicked="() => DeleteEntityAsync(context)" ConfirmationMessage="() => GetDeleteConfirmationMessage(context)" />
+            </EntityActions>
+          </DisplayTemplate>
+        </DataGridEntityActionsColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Id)" Caption="Id"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Name)" Caption="Name"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.PublishDate)" Caption="Publish date"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Price)" Caption="Price"></DataGridColumn>
+      </DataGridColumns>
+    </DataGrid>
+  </CardBody>
+</Card>
+
+
+
