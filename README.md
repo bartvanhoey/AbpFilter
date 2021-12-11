@@ -1,4 +1,4 @@
-## How to Filter an AbpCrudPageBase
+## How to Filter a standard paged list in the ABP Framework
 
 ## Introduction
 
