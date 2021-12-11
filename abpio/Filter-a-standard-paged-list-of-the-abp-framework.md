@@ -1,4 +1,4 @@
-## How to Filter a standard paged list in the ABP Framework
+## How to filter a standard paged list in the ABP Framework
 
 ## Introduction
 
