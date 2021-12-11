@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this step-by-step guide I will explain how you can hide the tenant switch on the login page of an **ABP Framework** application. After implementing all the steps below a user should be able to login with email address and password without losing multitenancy.
+In this article, I will show you how to filter a paged list (**Blazorise DataGrid component**) in an ABP Framework application with a Blazor user interface.
 
 The sample application has been developed with **Blazor** as UI framework and **SQL Server** as database provider.
 
@@ -15,7 +15,7 @@ The source code of the completed application is [available on GitHub](https://gi
 The following tools are needed to run the solution.
 
 - .NET 5.0 SDK
-- VsCode, Visual Studio 2019 or another compatible IDE.
+- vscode, Visual Studio 2019, or another compatible IDE.
 - ABP Cli
 
 ## Development
@@ -31,343 +31,319 @@ dotnet tool install -g Volo.Abp.Cli || dotnet tool update -g Volo.Abp.Cli
 - Use the following ABP CLI command to create a new Blazor ABP application:
 
 ```bash
-abp new AbpHideTenantSwitch -u blazor -o AbpHideTenantSwitch
+abp new AbpFilter -u blazor -o AbpFilter
 ```
 
 ### Open & Run the Application
 
 - Open the solution in Visual Studio (or your favorite IDE).
-- Run the `AbpHideTenantSwitch.DbMigrator` application to apply the migrations and seed the initial data.
-- Run the `AbpHideTenantSwitch.HttpApi.Host` application to start the server side.
-- Run the `AbpHideTenantSwitch.Blazor` application to start the Blazor UI project.
+- Run the `AbpFilter.DbMigrator` application to apply the migrations and seed the initial data.
+- Run the `AbpFilter.HttpApi.Host` application to start the server-side.
+- Run the `AbpFilter.Blazor` application to start the Blazor UI project.
 
-### Open HttpApi.Host.csproj and comment out the line below
+### BookStore
 
-```html
-<!-- <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic" Version="4.4.3" /> -->
-```
+To have a simple BookStore application to test with, add the code from the [BookStore Tutorial](https://docs.abp.io/en/abp/5.0/Tutorials/Part-1?UI=Blazor&DB=EF) (Part1-2).
 
-### Paste Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic module into src folder of ABP project
+## Domain layer
 
-- Open a command prompt and clone the [ABP repository](https://github.com/abpframework/abp) into your computer.
+### BookFilter class
 
-```bash
-   git clone https://github.com/abpframework/abp
-```
-
-- Find module **Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic** (abp/modules/basic-theme/src/...) in the ABP repo.
-- Copy/Paste the module into your **src folder** of the project.
-
-### Comment out and replace in the Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.csproj
-
-```html
-<!-- <Import Project="..\..\..\..\configureawait.props" /> -->
-<Import Project="..\..\common.props" />
-```
-
-### Comment out in Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.csproj
-
-```html
-<!-- <ItemGroup>
-    <ProjectReference Include="..\..\..\..\framework\src\Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy\Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy.csproj" />
-    <ProjectReference Include="..\..\..\..\framework\src\Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared\Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared.csproj" />
-  </ItemGroup> -->
-```
-
-### Install ABP packages
-
-Open a command prompt in the **Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic** and install ABP packages
-
-```bash
-    abp add-package Volo.Abp.AspNetCore.Mvc.UI.MultiTenancy
-    abp add-package Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared
-```
-
-### Change dotnet Target Framework
-
-Open file **Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.csproj** and change dotnet target framework.
-
-```html
-<!-- <TargetFramework>net6.0</TargetFramework> -->
-<TargetFramework>net5.0</TargetFramework>
-```
-
-### Build Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic project
-
-Open a **command prompt** in the **Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic** project and run command below:
-
-```bash
-    dotnet build
-```
-
-### Add reference to Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic
-
-Open a **command prompt** in the **HttpApi.Host** project and add a reference to Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic in the HttpApi.Host.csproj file by running command below
-
-```bash
-   dotnet add reference ../../src/Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic/Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic.csproj
-```
-
-### Build the HttpApi.Host project
-
-Open a **command prompt** in the **HttpApi.Host project** and run command below:
-
-```bash
-    dotnet build
-```
-
-### Hide Tenant Switch in Account.cshtml file
-
-Goto Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic\Themes\Basic\Themes\Basic\Layouts\Account.cshtml
-
-Comment out if statement below to hide Tenant Switch.
-
-```html
-@* @if (MultiTenancyOptions.Value.IsEnabled &&
-(TenantResolveResultAccessor.Result?.AppliedResolvers?.Contains(CookieTenantResolveContributor.ContributorName)
-== true ||
-TenantResolveResultAccessor.Result?.AppliedResolvers?.Contains(QueryStringTenantResolveContributor.ContributorName)
-== true)) {
-<div class="card shadow-sm rounded mb-3">
-    <div class="card-body px-5">
-        <div class="row">
-            <div class="col">
-                <span style="font-size: .8em;" class="text-uppercase text-muted"
-                    >@MultiTenancyStringLocalizer["Tenant"]</span
-                ><br />
-                <h6 class="m-0 d-inline-block">
-                    @if (CurrentTenant.Id == null) {
-                    <span> @MultiTenancyStringLocalizer["NotSelected"] </span>
-                    } else {
-                    <strong
-                        >@(CurrentTenant.Name ??
-                        CurrentTenant.Id.Value.ToString())</strong
-                    >
-                    }
-                </h6>
-            </div>
-            <div class="col-auto">
-                <a
-                    id="AbpTenantSwitchLink"
-                    href="javascript:;"
-                    class="btn btn-sm mt-3 btn-outline-primary"
-                    >@MultiTenancyStringLocalizer["Switch"]</a
-                >
-            </div>
-        </div>
-    </div>
-</div>
-}
-```
-
-### Add ConfigureTenantResolver() method in HttpApiHostModule of HttpApi.Host project
-
-Add method ConfigureTenantResolver right under the **ConfigureServices** method in the **HttpApiHostModule** class of the **HttpApi.Host project**
+Add a **BookFilter** class to the Books folder of the **Domain** project
 
 ```csharp
-// import using statements
-// using Volo.Abp.MultiTenancy;
+using System;
 
-private void ConfigureTenantResolver(ServiceConfigurationContext context, IConfiguration configuration)
+namespace AbpFilter.Domain.Books
 {
-    Configure<AbpTenantResolveOptions>(options =>
+    public class BookFilter
     {
-        options.TenantResolvers.Clear();
-        options.TenantResolvers.Add(new CurrentUserTenantResolveContributor());
-});
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string PublishDate { get; set; }
+        public string Price { get; set; }
+    }
 }
+
 ```
 
-### Call ConfigureTenantResolver() method from ConfigureServices() method
+### IBookRepository interface
+
+Add an **IBookRepository** interface to the Books folder of the **Domain** project.
 
 ```csharp
-public override void ConfigureServices(ServiceConfigurationContext context)
-{
- // other code here ...
-
-  ConfigureTenantResolver(context, configuration);
-}
-```
-
-### Add a Pages/Account folder to HttpApi.Host project
-
-### Add a CustomLoginModel.cs class to the Account folder
-
-```csharp
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Volo.Abp.Account.Web;
-using Volo.Abp.Account.Web.Pages.Account;
-using Volo.Abp.TenantManagement;
-using IdentityUser = Volo.Abp.Identity.IdentityUser;
+using Volo.Abp.Domain.Repositories;
 
-namespace AbpHideTenantSwitch.HttpApi.Host.Pages.Account
+namespace AbpFilter.Domain.Books
 {
-    public class CustomLoginModel : LoginModel
+    public interface IBookRepository : IRepository<Book, Guid>
     {
-        private readonly ITenantRepository _tenantRepository;
+        Task<List<Book>> GetListAsync(int skipCount, int maxResultCount, string sorting = "Name", BookFilter filter = null);
+        Task<int> GetTotalCountAsync(BookFilter filter);
+    }
+}
+```
 
-        public CustomLoginModel(IAuthenticationSchemeProvider schemeProvider, IOptions<AbpAccountOptions> accountOptions, IOptions<IdentityOptions> identityOptions, ITenantRepository tenantRepository) : base(schemeProvider, accountOptions, identityOptions)
+## Database layer
+
+## BookRepository class
+
+Add a **BookRepository** class to the Books folder of the **EntityFrameworkCore** project.
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using AbpFilter.Domain.Books;
+using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
+using Volo.Abp.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+using Microsoft.EntityFrameworkCore;
+
+namespace AbpFilter.EntityFrameworkCore.Books
+{
+    public class BookRepository : EfCoreRepository<AbpFilterDbContext, Book, Guid>, IBookRepository
+    {
+        public BookRepository(IDbContextProvider<AbpFilterDbContext> dbContextProvider) : base(dbContextProvider)
         {
-            _tenantRepository = tenantRepository;
         }
 
-        public override async Task<IActionResult> OnPostAsync(string action)
+        public async Task<List<Book>> GetListAsync(int skipCount, int maxResultCount, string sorting = "Name", BookFilter filter = null)
         {
-            var user = await FindUserAsync(LoginInput.UserNameOrEmailAddress);
-            using (CurrentTenant.Change(user?.TenantId))
-            {
-                return await base.OnPostAsync(action);
-            }
+            var dbSet = await GetDbSetAsync();
+            var books = await dbSet
+                .WhereIf(!filter.Id.IsNullOrWhiteSpace(), x => x.Id.ToString().Contains(filter.Id))
+                .WhereIf(!filter.Name.IsNullOrWhiteSpace(), x => x.Name.Contains(filter.Name))
+                .WhereIf(!filter.Price.IsNullOrWhiteSpace(), x => x.Price.ToString().Contains(filter.Price))
+                .WhereIf(!filter.PublishDate.IsNullOrWhiteSpace(), x => x.PublishDate.ToString().Contains(filter.PublishDate))
+                .OrderBy(sorting)
+                .Skip(skipCount)
+                .Take(maxResultCount)
+                .ToListAsync();
+            return books;
         }
 
-        protected virtual async Task<IdentityUser> FindUserAsync(string uniqueUserNameOrEmailAddress)
+        public async Task<int> GetTotalCountAsync(BookFilter filter)
         {
-            IdentityUser user = null;
-            using (CurrentTenant.Change(null))
-            {
-                user = await UserManager.FindByNameAsync(LoginInput.UserNameOrEmailAddress) ??
-                       await UserManager.FindByEmailAsync(LoginInput.UserNameOrEmailAddress);
+            var dbSet = await GetDbSetAsync();
+            var books = await dbSet
+                .WhereIf(!filter.Id.IsNullOrWhiteSpace(), x => x.Id.ToString().Contains(filter.Id))
+                .WhereIf(!filter.Name.IsNullOrWhiteSpace(), x => x.Name.Contains(filter.Name))
+                .WhereIf(!filter.Price.IsNullOrWhiteSpace(), x => x.Price.ToString().Contains(filter.Price))
+                .WhereIf(!filter.PublishDate.IsNullOrWhiteSpace(), x => x.PublishDate.ToString().Contains(filter.PublishDate))
+                .ToListAsync();
+            return books.Count;
+        }
+    }
+}
+```
 
-                if (user != null)
-                {
-                    return user;
-                }
-            }
+## Application layer
 
-            foreach (var tenant in await _tenantRepository.GetListAsync())
-            {
-                using (CurrentTenant.Change(tenant.Id))
-                {
-                    user = await UserManager.FindByNameAsync(LoginInput.UserNameOrEmailAddress) ??
-                           await UserManager.FindByEmailAsync(LoginInput.UserNameOrEmailAddress);
+### BookPagedAndSortedResultRequestDto class
 
-                    if (user != null)
-                    {
-                        return user;
-                    }
-                }
-            }
-            return null;
+Add a **BookPagedAndSortedResultRequestDto** class to the Books folder of the **Application.Contracts** project.
+This class inherits the **PagedAndSortedResultRequestDto** class.
+
+```csharp
+using Volo.Abp.Application.Dtos;
+
+namespace AbpFilter.Application.Contracts.Books
+{
+    public class BookPagedAndSortedResultRequestDto : PagedAndSortedResultRequestDto
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string PublishDate { get; set; }
+        public string Price { get; set; }
+    }
+}
+```
+
+### IBookAppService interface
+
+Update the **IBookAppService** interface in the Books folder of the **Application.Contracts** project.
+
+```csharp
+using System;
+using Volo.Abp.Application.Services;
+
+namespace AbpFilter.Application.Contracts.Books
+{
+    public interface IBookAppService : ICrudAppService<BookDto, Guid, BookPagedAndSortedResultRequestDto, CreateUpdateBookDto>, IApplicationService
+    {
+        
+    }
+}
+
+```
+
+### BookAutoMapperProfile class
+
+Add a **BookAutoMapperProfile** class to the Books folder of the **Application** project.
+
+```csharp
+using AbpFilter.Application.Contracts.Books;
+using AbpFilter.Domain.Books;
+using AutoMapper;
+
+namespace AbpFilter.Application.Books
+{
+    public class BookAutoMapperProfile : Profile
+    {
+        public BookAutoMapperProfile()
+        {
+            CreateMap<BookPagedAndSortedResultRequestDto, BookFilter>();
         }
     }
 }
 
 ```
 
-### Add a Login.cshtml file to the Account folder
+### BookAppService class
 
-```html
-@page @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers @addTagHelper *,
-Volo.Abp.AspNetCore.Mvc.UI @addTagHelper *, Volo.Abp.AspNetCore.Mvc.UI.Bootstrap
-@addTagHelper *, Volo.Abp.AspNetCore.Mvc.UI.Bundling @using
-Microsoft.AspNetCore.Mvc.Localization @using Volo.Abp.Account.Localization
-@using Volo.Abp.Account.Settings @using Volo.Abp.Settings @model
-AbpHideTenantSwitch.HttpApi.Host.Pages.Account.CustomLoginModel @inject
-IHtmlLocalizer<AccountResource>
-    L @inject Volo.Abp.Settings.ISettingProvider SettingProvider
-
-    <div class="card text-center mt-3 shadow-sm rounded">
-        <div class="card-body abp-background p-5">
-            <div class="form-group">
-                <img
-                    src="~/assets/images/thumbs-up.png"
-                    alt="ThumbsUp"
-                    width="100%"
-                />
-            </div>
-            @if (Model.EnableLocalLogin) {
-            <form method="post" class="mt-4 text-left">
-                <input asp-for="ReturnUrl" />
-                <input asp-for="ReturnUrlHash" />
-                <div class="form-group">
-                    <label>Email address</label>
-                    <input
-                        asp-for="LoginInput.UserNameOrEmailAddress"
-                        class="form-control"
-                    />
-                    <span
-                        asp-validation-for="LoginInput.UserNameOrEmailAddress"
-                        class="text-danger"
-                    ></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="LoginInput.Password"></label>
-                    <input asp-for="LoginInput.Password" class="form-control" />
-                    <span
-                        asp-validation-for="LoginInput.Password"
-                        class="text-danger"
-                    ></span>
-                </div>
-                <abp-button
-                    type="submit"
-                    button-type="Danger"
-                    name="Action"
-                    value="Login"
-                    class="btn-block btn-lg mt-3"
-                    >@L["Login"]</abp-button
-                >
-                @if (Model.ShowCancelButton) {
-                <abp-button
-                    type="submit"
-                    button-type="Secondary"
-                    formnovalidate="formnovalidate"
-                    name="Action"
-                    value="Cancel"
-                    class="btn-block btn-lg mt-3"
-                    >@L["Cancel"]</abp-button
-                >
-                }
-            </form>
-            }
-        </div>
-    </div></AccountResource
->
-```
-
-### Custom styles Login page
-
-Add a **custom-login-styles.css** file to the **wwwroot** folder of the **HttpApi.Host** project
-
-```html
-.abp-background { background-color: yellow !important; }
-```
-
-### Add custom styles to Bundle
-
-Open file **AbpHideTenantSwitchHttpApiHostModule.cs** of the **HttpApi.Host** project and add custom-login-styles.css to bundle.
+Override the **GetListAsync** method of the **BookAppService** class in the Books folder of the **Application** project, as in the code below:
 
 ```csharp
-private void ConfigureBundles()
-   {
-     Configure<AbpBundlingOptions>(options =>
-     {
-       options.StyleBundles.Configure(
-                 BasicThemeBundles.Styles.Global,
-                 bundle =>
-             {
-               bundle.AddFiles("/global-styles.css");
-               bundle.AddFiles("/custom-login-styles.css");
-             }
-             );
-     });
-   }
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using AbpFilter.Application.Contracts.Books;
+using AbpFilter.Domain.Books;
+using Volo.Abp.Application.Dtos;
+using Volo.Abp.Application.Services;
+
+namespace AbpFilter.Application.Books
+{
+    public class BookAppService : CrudAppService<Book, BookDto, Guid, BookPagedAndSortedResultRequestDto, CreateUpdateBookDto>, IBookAppService
+    {
+        private readonly IBookRepository _bookRepository;
+
+        public BookAppService(IBookRepository bookRepository) : base(bookRepository)
+        {
+            _bookRepository = bookRepository;
+        }
+
+        public override async Task<PagedResultDto<BookDto>> GetListAsync(BookPagedAndSortedResultRequestDto input)
+        {
+            var filter = ObjectMapper.Map<BookPagedAndSortedResultRequestDto, BookFilter>(input);
+
+            var sorting = (string.IsNullOrEmpty(input.Sorting) ? "Name DESC" : input.Sorting).Replace("ShortName", "Name");
+           
+            var books = await _bookRepository.GetListAsync(input.SkipCount, input.MaxResultCount, sorting, filter);
+            var totalCount = await _bookRepository.GetTotalCountAsync(filter);
+
+            return new PagedResultDto<BookDto>(totalCount,ObjectMapper.Map<List<Book>, List<BookDto>>(books));
+        }
+    }
+}
+
 ```
 
-### Add an Image
+### Books.razor page
 
-Add an **assets/images** folder to the **wwwroot** folder of the **HttpApi.Host** project and copy/paste an image into **images** folder.
+Override the **DataGrid** component of the **Books.razor** page in the **Blazor** project and Make sure you add the **Filterable** attribute and set it to **true**
+
+```html
+@page "/books"
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.AspNetCore.Components.Web
+@using AbpFilter.Application.Contracts.Books
+@using AbpFilter.Localization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AbpFilterResource> L
+@inject AbpBlazorMessageLocalizerHelper<AbpFilterResource> LH
+@inherits AbpCrudPageBase<IBookAppService, BookDto, Guid, BookPagedAndSortedResultRequestDto, CreateUpdateBookDto>
+
+<Card>
+  <CardBody>
+    <DataGrid TItem="BookDto" Filterable="true" Data="Entities" ReadData="OnDataGridReadAsync" TotalItems="TotalCount" ShowPager="true" PageSize="PageSize">
+      <DataGridColumns>
+        <DataGridEntityActionsColumn TItem="BookDto" @ref="@EntityActionsColumn">
+          <DisplayTemplate>
+            <EntityActions TItem="BookDto" EntityActionsColumn="@EntityActionsColumn">
+              <EntityAction TItem="BookDto" Text="@L["Edit"]" Visible="HasUpdatePermission" Clicked="() => OpenEditModalAsync(context)" />
+              <EntityAction TItem="BookDto" Text="@L["Delete"]" Visible="HasDeletePermission" Clicked="() => DeleteEntityAsync(context)" ConfirmationMessage="() => GetDeleteConfirmationMessage(context)" />
+            </EntityActions>
+          </DisplayTemplate>
+        </DataGridEntityActionsColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Id)" Caption="Id"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Name)" Caption="Name"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.PublishDate)" Caption="Publish date"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Price)" Caption="Price"></DataGridColumn>
+      </DataGridColumns>
+    </DataGrid>
+  </CardBody>
+</Card>
+```
+
+### Books.razor.cs class
+
+Override the **UpdateGetListInputAsync** and **OnDataGridReadAsync** methods as you can see below:
+
+```csharp
+using System.Linq;
+using System.Threading.Tasks;
+using AbpFilter.Application.Contracts.Books;
+using Blazorise.DataGrid;
+using Volo.Abp.Application.Dtos;
+
+namespace AbpFilter.Blazor.Pages
+{
+    public partial class Books
+    {
+        protected override Task UpdateGetListInputAsync()
+        {
+            if (GetListInput is ISortedResultRequest sortedResultRequestInput)
+            {
+                sortedResultRequestInput.Sorting = CurrentSorting;
+            }
+
+            if (GetListInput is IPagedResultRequest pagedResultRequestInput)
+            {
+                pagedResultRequestInput.SkipCount = (CurrentPage - 1) * PageSize;
+            }
+
+            if (GetListInput is ILimitedResultRequest limitedResultRequestInput)
+            {
+                limitedResultRequestInput.MaxResultCount = PageSize;
+
+            }
+            return Task.CompletedTask;
+        }
+
+        protected override Task OnDataGridReadAsync(DataGridReadDataEventArgs<BookDto> e)
+        {
+            var id = e.Columns.FirstOrDefault(c => c.SearchValue != null && c.Field == "Id");
+            if (id != null) this.GetListInput.Id = id.SearchValue.ToString();
+
+            var name = e.Columns.FirstOrDefault(c => c.SearchValue != null && c.Field == "Name");
+            if (name != null) this.GetListInput.Name = name.SearchValue.ToString();
+
+            var publishDate = e.Columns.FirstOrDefault(c => c.SearchValue != null && c.Field == "PublishDate");
+            if (publishDate != null) this.GetListInput.PublishDate = publishDate.SearchValue.ToString();
+
+            var price = e.Columns.FirstOrDefault(c => c.SearchValue != null && c.Field == "Price");
+            if (price != null) this.GetListInput.Price = price.SearchValue.ToString();
+
+            return base.OnDataGridReadAsync(e);
+        }
+    }
+}
+
+```
+
+## Test the result
 
 ### Start both the Blazor and the **HttpApi.Host** project to run the application
 
-Et voilà! The Login page **without a Tenant switch**!
+Et voilà! You can now filter a standard paged list (**Blazorise DataGrid component**) in the ABP Framework.
 
-![Login page without tenant switch](/Images/hidetenantswitchonloginpage.png)
-
-A user can now login with email address and username without specifying the tenant name.
+![Filtering in action](/Images/recording.gif)
 
 Get the [source code](https://github.com/bartvanhoey/AbpFilter.git) on GitHub.
 

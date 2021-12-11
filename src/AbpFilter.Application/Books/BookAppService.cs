@@ -5,7 +5,6 @@ using AbpFilter.Application.Contracts.Books;
 using AbpFilter.Domain.Books;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
-using Volo.Abp.Domain.Repositories;
 
 namespace AbpFilter.Application.Books
 {
@@ -24,11 +23,10 @@ namespace AbpFilter.Application.Books
 
             var sorting = (string.IsNullOrEmpty(input.Sorting) ? "Name DESC" : input.Sorting).Replace("ShortName", "Name");
            
-            var Books = await _bookRepository.GetListAsync(input.SkipCount, input.MaxResultCount, sorting, filter);
+            var books = await _bookRepository.GetListAsync(input.SkipCount, input.MaxResultCount, sorting, filter);
             var totalCount = await _bookRepository.GetTotalCountAsync(filter);
 
-            return new PagedResultDto<BookDto>(totalCount,
-                ObjectMapper.Map<List<Book>, List<BookDto>>(Books));
+            return new PagedResultDto<BookDto>(totalCount,ObjectMapper.Map<List<Book>, List<BookDto>>(books));
         }
     }
 }

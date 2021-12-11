@@ -1,4 +1,3 @@
-using System;
 using AbpFilter.Application.Contracts.Books;
 using AbpFilter.Domain.Books;
 using AutoMapper;

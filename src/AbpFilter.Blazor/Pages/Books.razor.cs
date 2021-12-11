@@ -1,12 +1,15 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
+
 using AbpFilter.Application.Contracts.Books;
+
 using Blazorise.DataGrid;
+
 using Volo.Abp.Application.Dtos;
 
 namespace AbpFilter.Blazor.Pages
 {
-    public partial class Index
+    public partial class Books
     {
         protected override Task UpdateGetListInputAsync()
         {

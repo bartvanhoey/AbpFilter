@@ -1,5 +1,3 @@
-using System;
-using AbpFilter.Domain.Shared.Books;
 using Volo.Abp.Application.Dtos;
 
 namespace AbpFilter.Application.Contracts.Books
