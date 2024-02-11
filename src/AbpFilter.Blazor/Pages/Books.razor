@@ -1,0 +1,16 @@
+@page "/books"
+@using AbpFilter.Books
+@inherits AbpCrudPageBase<AbpFilter.Books.IBookAppService, AbpFilter.Books.BookDto, Guid, AbpFilter.Books.BookPagedAndSortedResultRequestDto, AbpFilter.Books.CreateUpdateBookDto>
+
+<Card>
+  <CardBody>
+    <DataGrid TItem="BookDto" Filterable="true" Data="Entities" ReadData="OnDataGridReadAsync" TotalItems="TotalCount" ShowPager="true" PageSize="PageSize">
+      <DataGridColumns>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Id)" Caption="Id"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Name)" Caption="Name"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.PublishDate)" Caption="Publish date"></DataGridColumn>
+        <DataGridColumn TItem="BookDto" Field="@nameof(BookDto.Price)" Caption="Price"></DataGridColumn>
+      </DataGridColumns>
+    </DataGrid>
+  </CardBody>
+</Card>
